@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html> 
+<head> 
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"> 
+  <title>Google Maps Multiple Markers</title> 
+  <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+  <style>
+.left-div {
+    float: left;
+    width: 100px;   
+    margin-right: 8px;
+
+}
+.right-div {
+
+    margin-left: 670px;
+
+}​​
+  </style>
+</head> 
+<body>
+
+  <div class="left-div" id="container">
+
+	<label>Latitude :</label>
+	<input id="latitude" type="text">
+	<label>Longitude :</label>
+	<input id="longitude" type="text">
+	<input id="submit" type="button" value="Submit">
+  </div>
+
+  <input class="right-div" id="preview" type="button" value="Preview">
+  <div class="right-div" id="map" style="width: 500px; height: 400px;"></div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="./js/fetch.js"></script>
+  <script>
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 4,
+      center: new google.maps.LatLng(20.5937, 78.9629),
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+      mapTypeControl: false,
+      streetViewControl: false,
+      panControl: false,
+      zoomControlOptions: {
+         position: google.maps.ControlPosition.LEFT_BOTTOM
+      }
+    });
+
+function renderMap(data) {
+    var icon = "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+   
+    var markers = new Array();
+
+    for (var i = 0; i < data.length; i++) {  
+      var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(data[i]['latitude'], data[i]['longitude']),
+        map: map,
+        icon: icon
+      });
+
+      markers.push(marker);
+    }
+    function autoCenter() {
+      //  Create a new viewpoint bound
+      var bounds = new google.maps.LatLngBounds();
+      //  Go through each...
+      for (var i = 0; i < markers.length; i++) {  
+				bounds.extend(markers[i].position);
+      }
+      //  Fit these bounds to the map
+      map.fitBounds(bounds);
+    }
+    autoCenter();
+}
+
+/* post call */
+    $('#submit').on('click', function(e) {
+	e.preventDefault();
+var data = {
+	"latitude" : $('#latitude').val(),
+	"longitude" : $('#longitude').val()
+};
+fetch('http://localhost:8080/postLocation', {
+  method: 'POST',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(data)
+}).then(function(response) {
+    return response.json()
+  }).then(function(json) {
+    if(json.code === '200') {
+	$('#latitude').val('');
+	$('#longitude').val('');  
+}
+	
+  }).catch(function(ex) {
+    console.log('Error', ex)
+  });
+    });
+
+/* Get Request */
+$('#preview').on('click', function(e) {
+e.preventDefault();
+fetch('http://localhost:8080/getLocations')
+  .then(function(response) {
+    return response.json()
+  }).then(function(json) {
+    if(json.code === 200 && json.data.length) {
+	renderMap(json.data);
+    }
+  }).catch(function(ex) {
+    console.log('Error', ex)
+  });
+});
+
+  </script> 
+</body>
+</html>
+
