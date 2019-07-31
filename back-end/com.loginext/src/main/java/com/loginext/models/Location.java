@@ -1,3 +1,5 @@
+//@author Sayan Sinha Ray
+
 package com.loginext.models;
 
 import javax.persistence.Entity;
